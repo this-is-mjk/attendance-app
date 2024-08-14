@@ -86,7 +86,7 @@ class CapturePicPageState extends State<CapturePicPage> {
 
   @override
   void dispose() {
-    _controller!.dispose();
+    _controller!.dispose(); // if no camera is available, the controller will be null
     super.dispose();
   }
 

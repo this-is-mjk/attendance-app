@@ -1,6 +1,7 @@
 import 'package:attendance_app/location/location_service.dart';
 import 'package:attendance_app/location/map.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -13,21 +14,27 @@ class LocationPage extends StatefulWidget {
 
 class _LocationPageState extends State<LocationPage> {
   Position? _currentPosition;
-  List<LatLng> _locations = [];
+  // List<LatLng> _locations = [];
+  List<LocationMarkerPosition> _locations = [];
   bool _fetchingLocation = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Location"),
+        backgroundColor: Colors.blue,
+        title: const Text("LOCATION"),
       ),
-      body: _locations.isEmpty ? _buildPlaceholder() : LocationMap(locations: _locations),
+      body: _locations.isEmpty
+          ? _buildPlaceholder()
+          : LocationMap(locations: _locations),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            onPressed: _fetchingLocation ? null : _getCurrentLocation, // Disable button while fetching
+            onPressed: _fetchingLocation
+                ? null
+                : _getCurrentLocation, // Disable button while fetching
             child: _fetchingLocation
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -60,7 +67,12 @@ class _LocationPageState extends State<LocationPage> {
       Position position = await LocationService().determinePosition();
       setState(() {
         _currentPosition = position;
-        _locations.add(LatLng(position.latitude, position.longitude));
+        // _locations.add(LatLng(position.latitude, position.longitude));
+        _locations.add(LocationMarkerPosition(
+          latitude: position.latitude,
+          longitude: position.longitude,
+          accuracy: position.accuracy,
+        ));
         _fetchingLocation = false; // Fetching completed
       });
     } catch (e) {
@@ -74,7 +86,7 @@ class _LocationPageState extends State<LocationPage> {
 
   void _printLocations() {
     for (var location in _locations) {
-      print('Latitude: ${location.latitude}, Longitude: ${location.longitude}');
+      print('Latitude: ${location.latitude}, Longitude: ${location.longitude}, Accuracy: ${location.accuracy}');
     }
   }
 
