@@ -22,7 +22,6 @@ const registerUser = async (req, res) => {
       }
       res.status(200).json({ msg: "User Created", user });
     });
-    console.log("User Registered");
   } catch (err) {
     res.status(500).json({ msg: "Server Error" });
   }
@@ -124,10 +123,13 @@ const markAttendance = async (req, res) => {
 // TODO: handle the case of the admin if he uses this route
 // returns all events of the user,
 const userEvents = async (req, res) => {
-  console.log("Get All Events got hit!");
+  console.log("UserEvents got hit!");
   try {
-    // const { employeeId } = req.body;
     const employeeId = req.userId;
+    if(req.role === "ADMIN"){
+      return res.status(200).json({ msg: "working to give all events" });
+    }
+    // if not admin
     const { error, events } = await getUserEvents(employeeId);
     if (error) {
       return res.status(error.code).json({ msg: error.msg });

@@ -198,7 +198,7 @@ class _LoginPageState extends State<LoginPage> {
 
     // Make API call to login user
     try {
-      // Replace with your actual API endpoint
+      // Replace with actual API endpoint
       final response = await http.post(
         Uri.parse('http://localhost:3000/user/login'),
         headers: {'Content-Type': 'application/json'},

@@ -14,6 +14,7 @@ exports.authenticateToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.user.userId;
+    req.role = decoded.user.role;
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
@@ -27,9 +28,11 @@ exports.authenticateToken = (req, res, next) => {
 // TODO: Do we need, to again check the role, as already in token?
 exports.authenticateUserRole = async (req, res, next) => {
   try {
-    const userId = req.userId;
-    const user = await getUser(userId);
-    if (user.role === "ADMIN") {
+    // const userId = req.userId;
+    // const user = await getUser(userId);
+
+    // this auth will alwas come after authenticateToken so we can use req.role
+    if (req.role === "ADMIN") {
       next();
     } else {
       res.status(401).json({ message: "User does not have authority" });

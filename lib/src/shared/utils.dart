@@ -80,36 +80,45 @@ bool is_Absent(DateTime? a) {
 
 class Event {
   final String title;
+  final String discription;
+  final DateTime date;
   final String location;
-  // final int x,y;
-  // To Do : add new attributes to make this as per the desired Event struct.
+  final List<int> assignedOfficers;
+  final List<int> subEventsId;
+  final int id;
 
   const Event(
     this.title,
     this.location,
+    this.discription,
+    this.date,
+    this.assignedOfficers,
+    this.subEventsId,
+    this.id,
   );
 
   @override
   String toString() => title;
 }
 
-final kEvents = LinkedHashMap<DateTime, List<Event>>(
-  equals: isSameDay,
-  hashCode: getHashCode,
-)..addAll(_kEventSource);
 
-// dummy data generator
-final _kEventSource = {
-  for (var item in List.generate(50, (index) => index))
-    DateTime.utc(kFirstDay.year, kFirstDay.month, item * 5): List.generate(
-        item % 4 + 1,
-        (index) => Event('Event $item | ${index + 1}', 'Sample Location'))
-}..addAll({
-    kToday: [
-      const Event('SnT Code :<', 'OAT'),
-      const Event('Finishing Party ~yash', 'Mama Mio :)'),
-    ],
-  });
+// final kEvents = LinkedHashMap<DateTime, List<Event>>(
+//   equals: isSameDay,
+//   hashCode: getHashCode,
+// )..addAll(_kEventSource);
+
+// // dummy data generator
+// final _kEventSource = {
+//   for (var item in List.generate(50, (index) => index))
+//     DateTime.utc(kFirstDay.year, kFirstDay.month, item * 5): List.generate(
+//         item % 4 + 1,
+//         (index) => Event('Event $item | ${index + 1}', 'Sample Location'))
+// }..addAll({
+//     kToday: [
+//       const Event('SnT Code :<', 'OAT'),
+//       const Event('Finishing Party ~yash', 'Mama Mio :)'),
+//     ],
+//   });
 
 int getHashCode(DateTime key) {
   return key.day * 1000000 + key.month * 10000 + key.year;

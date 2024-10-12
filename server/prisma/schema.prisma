@@ -18,7 +18,7 @@ datasource db {
 
 // TODO: we can directly mark the attendance from the ui, it will check if the user is in the radius of th loaction
 
-// TODO: I feel no need of the Location model
+// TODO: I feel no need of the Location model, we can have unique in together(x and y) coordinate in the event model
 model Location {
   id           Int    @id @default(autoincrement())
   locationName String
@@ -30,43 +30,45 @@ model Location {
 model Attendance {
   id         Int      @id @default(autoincrement())
   locationId Int
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [employeeId])
   userId     Int
   time       DateTime @default(now())
 }
 
 // show in the profile section
 model Profile {
-  id         Int    @id @default(autoincrement())
   employeeId Int    @unique
   name       String
+  gender     Gender
   position   String
   password   String
-  user       User   @relation(fields: [userId], references: [id])
+  user       User   @relation(fields: [userId], references: [employeeId])
   userId     Int    @unique
 }
 
-// TODO: we can shift the role to the profile model
 model User {
-  id         Int          @id @default(autoincrement())
-  profile    Profile?
-  role       Role         @default(USER)
-  Attendance Attendance[]
-  events     Event[]      @relation("UserEvents")
+  employeeId    Int          @id @unique
+  profile       Profile?
+  role          Role         @default(USER)
+  Attendance    Attendance[]
+  events        Event[]      @relation("UserEvents")
+  createdEvents Event[]
 }
-
-// TODO: To fix dublicate event cretion, need somthing to stop it
 model Event {
   id               Int       @id @default(autoincrement())
+  // Event Details
   title            String
   description      String?
   date             DateTime  @default(now())
   location         Location? @relation(fields: [locationId], references: [id])
   locationId       Int?      @unique
+  // Creator of the event
+  creator          User      @relation(fields: [creatorId], references: [employeeId])
+  creatorId        Int
   assignedOfficers User[]    @relation("UserEvents")
-  // TODO: it's a one to many one relation int parentEvent, need one i think
+  // Sub events and parent event
   subEvents        Event[]   @relation("subEvents")
-  parentEvent      Event?     @relation("subEvents", references: [id], fields: [parentEventId])
+  parentEvent      Event?    @relation("subEvents", fields: [parentEventId], references: [id])
   parentEventId    Int?
 }
 
@@ -74,4 +76,10 @@ enum Role {
   ADMIN // 2
   USER // 3
   OBSERVER // 1
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
 }

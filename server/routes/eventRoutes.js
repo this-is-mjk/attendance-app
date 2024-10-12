@@ -5,10 +5,11 @@ const {
 
 const {
   createEvent,
-  createSubEvent,
+  // createSubEvent,
   getAllEvents,
   deleteEvent,
   getAllRecentEventAttendance,
+  linkOfficersToEvent,
 } = require("../controllers/eventController");
 
 const express = require("express");
@@ -21,18 +22,18 @@ router.post(
   createEvent
 );
 router.post(
-  "/createSubEvent",
+  "/assignOfficers",
   authenticateToken,
   authenticateUserRole,
-  createSubEvent
+  linkOfficersToEvent
 );
-router.delete(
-  "/delete",
+router.delete("/delete", authenticateToken, authenticateUserRole, deleteEvent);
+router.get("/", authenticateToken, authenticateUserRole, getAllEvents);
+router.post(
+  "/getEventRecentAttandance",
   authenticateToken,
   authenticateUserRole,
-  deleteEvent
-)
-router.get("/", authenticateToken, authenticateUserRole, getAllEvents);
-router.post("/getEventRecentAttandance", authenticateToken, authenticateUserRole,getAllRecentEventAttendance)
+  getAllRecentEventAttendance
+);
 
 module.exports = router;

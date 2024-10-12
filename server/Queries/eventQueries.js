@@ -2,13 +2,24 @@ const { getUser } = require("./userQueries");
 
 const prisma = require("../db/prisma");
 
-const createEvent = async (title, description, date, location) => {
+const createEvent = async (
+  title,
+  description,
+  date,
+  location,
+  creatorUserId
+) => {
   try {
     const newEvent = await prisma.event.create({
       data: {
         title,
         description,
         date,
+        creator: {
+          connect: {
+            employeeId: creatorUserId,
+          },
+        },
         location: {
           create: {
             locationName: location["locationName"],
@@ -21,41 +32,34 @@ const createEvent = async (title, description, date, location) => {
         location: true,
       },
     });
-    console.log("Event Created: " + newEvent);
-    // FIXME: you made the return newEvent in {newEvent} format, why?
     return newEvent;
   } catch (error) {
-    console.log(`Error creating event ${error}`);
+    console.log(`Error Creating Event: ${error}`);
     throw new Error("Error creating Event");
   }
 };
+
 const assignUsers = async (eventId, userIds) => {
   try {
-    // Fetch user IDs from getUser in parallel
-    const userIdPromises = userIds.map((userId) => getUser(userId));
-    const users = await Promise.all(userIdPromises);
-    const userIdsToConnect = users.map((user) => ({ id: user.id }));
-
     const updatedEvent = await prisma.event.update({
       where: {
         id: eventId,
       },
       data: {
         assignedOfficers: {
-          // FIXME: this will not work as the userId is the employe id
-          connect: userIdsToConnect,
+          connect: userIds.map((id) => ({ employeeId: id })),
         },
       },
     });
-    console.log(`Users assigned to event ${updatedEvent}`);
-    // FIXME: changed {updatedEvent} in updatedEventformat
     return updatedEvent;
   } catch (error) {
-    console.log(`Error Updating the Event: ${error}`);
-    throw new Error("Error Assigning Users");
+    return null;
   }
 };
 const linkSubEvent = async (parentEventId, subEventId) => {
+  if (parentEventId === subEventId) {
+    return null;
+  }
   try {
     const subEvent = await prisma.event.update({
       where: { id: subEventId },
@@ -65,25 +69,23 @@ const linkSubEvent = async (parentEventId, subEventId) => {
         },
       },
     });
-    console.log(`SubEvent Linked Successfully`);
-    return { subEvent };
+    return subEvent;
   } catch (error) {
-    console.log(`Error Linking SubEvent ${error}`);
-    throw new Error("Error Linking Sub Event");
+    return null;
   }
 };
 const getEvents = async () => {
   try {
     const events = await prisma.event.findMany({
       include: {
-        location: true,
-        subEvents: true,
-        assignedOfficers: true,
+        title: true,
+        description: true,
+        date: true,
       },
     });
     return events;
   } catch (error) {
-    throw new Error("Error fetching events");
+    return null;
   }
 };
 const getEvent = async (eventId) => {
@@ -94,13 +96,11 @@ const getEvent = async (eventId) => {
       },
       include: {
         location: true,
-        subEvents: true,
-        assignedOfficers: true,
       },
     });
-    return { event };
+    return event;
   } catch (error) {
-    throw new Error("Error fetching event");
+    return null;
   }
 };
 const deleteEvent = async (eventId) => {
@@ -110,6 +110,12 @@ const deleteEvent = async (eventId) => {
         parentEventId: eventId,
       },
     });
+    const event = await getEvent(eventId);
+    await prisma.location.delete({
+      where: {
+        id: event.locationId,
+      },
+    });
     await prisma.event.delete({
       where: {
         id: eventId,
@@ -117,7 +123,8 @@ const deleteEvent = async (eventId) => {
     });
     return { success: "Events deleted successfully" };
   } catch (error) {
-    throw new Error("Error deleting Event");
+    console.log(`Error Deleting Event: ${error}`);
+    throw new Error("Error deleting Event, and related sub events, location");
   }
 };
 

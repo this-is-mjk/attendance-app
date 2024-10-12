@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", login);
-router.post("/events", authenticateToken, userEvents);
+router.get("/events", authenticateToken, userEvents);
 router.post("/attendance", getAttendance);
 router.post("/markattendance", markAttendance);
 

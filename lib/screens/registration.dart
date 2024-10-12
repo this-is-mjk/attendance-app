@@ -44,6 +44,8 @@ class RegistrationPageState extends State<RegistrationPage> {
           },
           body: jsonEncode({
             'role': "USER",
+            // TODO: add, a filed in the form for this
+            'GENDER': "MALE",
             'employee_id': employeeId,
             'name': name,
             'position': position,

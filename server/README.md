@@ -1,3 +1,13 @@
+# Database
+
+Prisma Studio: A GUI for interacting with your database. You can view and modify data directly using this interface.
+
+Run this in the server folder
+
+```
+ npx prisma studio
+```
+
 # attendance-app
 
 To install dependencies:
