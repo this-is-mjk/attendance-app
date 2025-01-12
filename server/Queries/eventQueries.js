@@ -2,40 +2,26 @@ const { getUser } = require("./userQueries");
 
 const prisma = require("../db/prisma");
 
-const createEvent = async (
-  title,
-  description,
-  date,
-  location,
-  creatorUserId
-) => {
+const createEvent = async (data, creatorId) => {
   try {
     const newEvent = await prisma.event.create({
       data: {
-        title,
-        description,
-        date,
+        title: data.title,
+        description: data.description,
+        date: data.date,
+        locationName: data.locationName,
+        xCoordinate: data.xCoordinate,
+        yCoordinate: data.yCoordinate,
         creator: {
           connect: {
-            employeeId: creatorUserId,
+            employeeId: creatorId,
           },
         },
-        location: {
-          create: {
-            locationName: location["locationName"],
-            xCoordinate: location["xCoordinate"],
-            yCoordinate: location["yCoordinate"],
-          },
-        },
-      },
-      include: {
-        location: true,
       },
     });
-    return newEvent;
-  } catch (error) {
-    console.log(`Error Creating Event: ${error}`);
-    throw new Error("Error creating Event");
+    return { event: newEvent };
+  } catch (err) {
+    return { error: err, event: null };
   }
 };
 
@@ -93,9 +79,6 @@ const getEvent = async (eventId) => {
     const event = await prisma.event.findUnique({
       where: {
         id: eventId,
-      },
-      include: {
-        location: true,
       },
     });
     return event;

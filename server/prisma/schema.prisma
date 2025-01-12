@@ -13,44 +13,47 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // url = "postgresql://appadmin:ps1@localhost:5432/appdata?schema=public"
 }
 
-// TODO: we can directly mark the attendance from the ui, it will check if the user is in the radius of th loaction
+enum Role {
+  ADMIN 
+  USER
+  OBSERVER
+}
 
-// TODO: I feel no need of the Location model, we can have unique in together(x and y) coordinate in the event model
-model Location {
-  id           Int    @id @default(autoincrement())
-  locationName String
-  xCoordinate  Float
-  yCoordinate  Float
-  event        Event?
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
 }
 
 model Attendance {
   id         Int      @id @default(autoincrement())
-  locationId Int
-  user       User     @relation(fields: [userId], references: [employeeId])
+  present Boolean
   userId     Int
   time       DateTime @default(now())
+  distance Float
+  xCoordinate  Float
+  yCoordinate  Float
+  // relation to event
+  event Event @relation(fields: [eventId], references: [id])
+  eventId Int
 }
 
 // show in the profile section
 model Profile {
-  employeeId Int    @unique
   name       String
   gender     Gender
   position   String
-  password   String
   user       User   @relation(fields: [userId], references: [employeeId])
   userId     Int    @unique
 }
 
 model User {
   employeeId    Int          @id @unique
+  password      String       
   profile       Profile?
   role          Role         @default(USER)
-  Attendance    Attendance[]
   events        Event[]      @relation("UserEvents")
   createdEvents Event[]
 }
@@ -60,8 +63,10 @@ model Event {
   title            String
   description      String?
   date             DateTime  @default(now())
-  location         Location? @relation(fields: [locationId], references: [id])
-  locationId       Int?      @unique
+  // location details
+  locationName String
+  xCoordinate  Float
+  yCoordinate  Float
   // Creator of the event
   creator          User      @relation(fields: [creatorId], references: [employeeId])
   creatorId        Int
@@ -70,16 +75,6 @@ model Event {
   subEvents        Event[]   @relation("subEvents")
   parentEvent      Event?    @relation("subEvents", fields: [parentEventId], references: [id])
   parentEventId    Int?
-}
-
-enum Role {
-  ADMIN // 2
-  USER // 3
-  OBSERVER // 1
-}
-
-enum Gender {
-  MALE
-  FEMALE
-  OTHER
+  // Attendace
+  attendance Attendance[]
 }

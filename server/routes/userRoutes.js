@@ -1,8 +1,8 @@
 const {
-  registerUser,
+  register,
   login,
   userEvents,
-  getAttendance,
+  // getAttendance,
   markAttendance,
 } = require("../controllers/userController");
 
@@ -11,10 +11,10 @@ const { authenticateToken } = require("../middlewares/authenticate");
 const express = require("express");
 const router = express.Router();
 
-router.post("/register", registerUser);
+router.post("/register", register);
 router.post("/login", login);
 router.get("/events", authenticateToken, userEvents);
-router.post("/attendance", getAttendance);
+// router.post("/attendance", getAttendance);
 router.post("/markattendance", markAttendance);
 
 module.exports = router;

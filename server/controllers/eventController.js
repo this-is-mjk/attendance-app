@@ -3,61 +3,45 @@ const {
   getLocation,
 } = require("../Queries/userQueries");
 
-const EventQueries = require("../Queries/eventQueries");
+const {
+  getEvent,
+  createEvent,
+  linkSubEvent,
+  deleteEvent,
+} = require("../Queries/eventQueries");
 
-const createEvent = async (req, res) => {
+const createEventHandler = async (req, res) => {
   try {
-    const { title, description, date, locationName, xCoordinate, yCoordinate } =
-      req.body;
-    const createUserId = req.userId;
-    const location = {
-      locationName,
-      xCoordinate,
-      yCoordinate,
-    };
-    try {
-      const event = await EventQueries.createEvent(
-        title,
-        description,
-        date,
-        location,
-        createUserId
-      );
-      if (!event) {
-        throw Error("Error Creating Event");
-      }
-      // if sub event
-      try {
-        const { parentEventId } = req.body;
-        if (parentEventId) {
-          const subEvent = await EventQueries.linkSubEvent(
-            parentEventId,
-            event.id
-          );
-          if (subEvent) {
-            return res.json({
-              message: "Sub Event Created Successfully",
-              id: event.id,
-            });
-          } else {
-            throw new Error("Error linking parent and SubEvent");
-          }
-        }
-      } catch (error) {
-        // if sub event creation fails, delete the temp event created
-        await EventQueries.deleteEvent(event.id);
-        return res.status(500).json({ message: error.message });
-      }
-      // if noraml event
-      return res
-        .status(200)
-        .json({ message: "Event Created Successfully", id: event.id });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ message: "Error Creating Event" });
+    const event = await createEvent(req.body, req.userId);
+    console.log(event);
+    if (event.error) {
+      return res.status(500).json({ msg: "Bad Request" });
     }
+    try {
+      const { parentEventId } = req.body;
+      if (parentEventId) {
+        const subEvent = await linkSubEvent(parentEventId, event.id);
+        if (subEvent) {
+          return res.json({
+            message: "Sub Event Created Successfully",
+            id: event.id,
+          });
+        } else {
+          throw new Error("Error linking parent and SubEvent");
+        }
+      }
+    } catch (error) {
+      // if sub event creation fails, delete the temp event created
+      await deleteEvent(event.id);
+      return res.status(500).json({ message: error.message });
+    }
+    // if noraml event
+    return res
+      .status(200)
+      .json({ message: "Event Created Successfully", id: event.id });
   } catch (error) {
-    res.status(400).json({ message: "Bad Request" });
+    console.log(error);
+    res.status(500).json({ message: "Error Creating Event" });
   }
 };
 
@@ -74,7 +58,6 @@ const linkOfficersToEvent = async (req, res) => {
     res.status(400).json({ message: "Bad Request" });
   }
 };
-
 
 const getAllEvents = async (req, res) => {
   try {
@@ -148,8 +131,25 @@ const getAllRecentEventAttendance = async (req, res) => {
     }
   }
 };
+
+const getEventDetails = async (req, res) => {
+  const { eventId } = req.params;
+  const { role, userID } = res.body;
+  const event = await getEvent(eventId);
+  if (
+    role === "ADMIN" ||
+    userID === event.creatorId ||
+    event.assignedOfficers.some((officer) => officer.employeeId === userID)
+  ) {
+    res.status(200).json({ event: event });
+  } else {
+    res.status(401).json({ msg: "Unauthorize request" });
+  }
+};
+
 module.exports = {
-  createEvent,
+  getEventDetails,
+  createEventHandler,
   // createSubEvent,
   getAllEvents,
   getAllRecentEventAttendance,

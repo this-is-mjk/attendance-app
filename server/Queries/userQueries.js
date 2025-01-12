@@ -1,41 +1,32 @@
 const prisma = require("../db/prisma");
 const bcrypt = require("bcrypt");
 
-const createUser = async (req, callback) => {
+const doUserExist = async (employeeId) => {
   try {
-    const existingUser = await getUser(req.body.employee_id);
-    if (existingUser) {
-      return callback({ error: "User already exists", code: 403 }, null);
-    }
-    const salt = await bcrypt.genSalt(10);
-    const password = await bcrypt.hash(req.body.password, salt);
-    const user = await prisma.user.create({
-      data: {
-        employeeId: req.body.employee_id,
-        role: req.body.role,
-        profile: {
-          create: {
-            employeeId: req.body.employee_id,
-            name: req.body.name,
-            gender: req.body.gender,
-            position: req.body.position,
-            password: password,
-          },
-        },
-      },
-      include: {
-        profile: {
-          select: {
-            name: true,
-            position: true,
-            gender: true,
-          },
-        },
+    const user = await prisma.user.findUnique({
+      where: {
+        employeeId: employeeId,
       },
     });
-    callback(null, user); // Successful creation
+    return { exists: user ? true : false, user: user };
+  } catch (err) {
+    return { exists: null, error: err.message };
+  }
+};
+
+const getUser = async (employee_Id) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        employeeId: employee_Id,
+      },
+      include: {
+        profile: true,
+      },
+    });
+    return { exists: user ? true : false, user: user };
   } catch (error) {
-    callback({ error: "Bad Request", code: 400 }, null); // Error handling
+    return { exists: null, error: err.message };
   }
 };
 
@@ -48,44 +39,29 @@ const getUsers = async () => {
     });
     return users;
   } catch (error) {
-    console.log(error);
     return null;
   }
 };
 
-const getUser = async (employee_Id) => {
+const createUser = async (data) => {
   try {
-    const user = await prisma.user.findFirst({
-      where: {
-        employeeId: employee_Id,
-      },
-      include: {
-        profile: true,
-        events: true,
-      },
-    });
-    return user;
-  } catch (error) {
-    return null;
-  }
-};
-
-const getUserAttendance = async (employeeId) => {
-  try {
-    const user = await prisma.user.findFirst({
-      where: {
+    const newUser = await prisma.user.create({
+      data: {
+        employeeId: data.employee_id,
+        password: data.password,
+        role: data.role,
         profile: {
-          employeeId,
+          create: {
+            name: data.name,
+            gender: data.gender,
+            position: data.position,
+          },
         },
       },
-      include: {
-        Attendance: true,
-      },
     });
-    return user;
-  } catch (error) {
-    console.log(error);
-    return null;
+    return { user: newUser };
+  } catch (err) {
+    return { user: null, error: err.message };
   }
 };
 
@@ -160,11 +136,12 @@ const getLocation = async (locationId) => {
   }
 };
 module.exports = {
+  doUserExist,
   createUser,
   getUsers,
   getUser,
   getUserEvents,
-  getUserAttendance,
+  // getUserAttendance,
   getUserAttendanceById,
   getLocation,
 };

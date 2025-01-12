@@ -4,7 +4,8 @@ const {
 } = require("../middlewares/authenticate");
 
 const {
-  createEvent,
+  getEventDetails,
+  createEventHandler,
   // createSubEvent,
   getAllEvents,
   deleteEvent,
@@ -19,7 +20,7 @@ router.post(
   "/createEvent",
   authenticateToken,
   authenticateUserRole,
-  createEvent
+  createEventHandler
 );
 router.post(
   "/assignOfficers",
@@ -29,6 +30,7 @@ router.post(
 );
 router.delete("/delete", authenticateToken, authenticateUserRole, deleteEvent);
 router.get("/", authenticateToken, authenticateUserRole, getAllEvents);
+router.get("/event/:eventId", authenticateToken, getEventDetails);
 router.post(
   "/getEventRecentAttandance",
   authenticateToken,
